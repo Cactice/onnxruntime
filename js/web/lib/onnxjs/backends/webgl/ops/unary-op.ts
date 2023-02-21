@@ -42,6 +42,18 @@ export function glslElu(alpha: number): GlslValueFunction {
   `;
   return {body, name, type: FunctionType.ValueBased};
 }
+export function glslErf(): GlslValueFunction {
+  const name = 'erf';
+  const body = `
+  float ${name}_(float a) {
+    return sign(a) * sqrt(1.0 - exp2(-1.787776 * a * a));
+  }
+  vec4 ${name}_(vec4 v) {
+    return sign(v) * sqrt(1.0 - exp2(-1.787776 * v * v));
+  }
+  `;
+  return {body, name, type: FunctionType.ValueBased};
+}
 export function glslExp(): GlslValueFunction {
   return glslBuiltinUnary('exp');
 }
@@ -274,6 +286,11 @@ export const elu =
 
 export const parseEluAttributes = (node: Graph.Node): EluAttributes =>
     createAttributeWithCacheKey({alpha: node.attributes.getFloat('alpha', 1.0)});
+
+export const erf =
+    (handler: WebGLInferenceHandler, inputs: Tensor[]): Tensor[] => [handler.run(
+        createElementwiseProgramInfoLoader(handler, inputs[0], glslErf()),
+        inputs)];
 
 export const exp = (handler: WebGLInferenceHandler, inputs: Tensor[]):
     Tensor[] => [handler.run(createElementwiseProgramInfoLoader(handler, inputs[0], glslExp()), inputs)];
